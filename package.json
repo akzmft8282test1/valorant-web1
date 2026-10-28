@@ -1,12 +1,11 @@
 {
-  "name": "valorant-web-game",
+  "name": "valorant-web-fps",
   "version": "1.0.0",
-  "description": "Browser FPS Game inspired by Valorant",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.19.2"
   }
 }
