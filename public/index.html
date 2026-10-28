@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Valorant Style Web FPS</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      user-select: none;
+      background-color: #000;
+    }
+    #game-container {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+    }
+    /* 크로스헤어 (조준점) */
+    #crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 10px;
+      height: 10px;
+      margin-top: -5px;
+      margin-left: -5px;
+      pointer-events: none;
+      z-index: 10;
+    }
+    #crosshair::before, #crosshair::after {
+      content: '';
+      position: absolute;
+      background: rgba(0, 255, 0, 0.8);
+    }
+    #crosshair::before { top: 4px; left: 0; width: 10px; height: 2px; }
+    #crosshair::after { top: 0; left: 4px; width: 2px; height: 10px; }
+
+    /* UI 오버레이 */
+    #ui {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: #fff;
+      font-size: 18px;
+      text-shadow: 1px 1px 2px black;
+      z-index: 10;
+      pointer-events: none;
+    }
+    
+    /* 포인터 락 안내 화면 및 설정 */
+    #instructions {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      z-index: 20;
+    }
+    #start-btn {
+      padding: 15px 30px;
+      font-size: 20px;
+      background: #ff4655;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 20px;
+      font-weight: bold;
+      border-radius: 4px;
+    }
+    #start-btn:hover { background: #e03e4c; }
+
+    /* Keybind Config UI */
+    .settings {
+      margin-top: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 8px;
+    }
+    .bind-row {
+      display: flex;
+      justify-content: space-between;
+      width: 200px;
+      margin: 5px 0;
+    }
+    .bind-btn {
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+      padding: 2px 8px;
+      cursor: pointer;
+    }
+  </style>
+  <!-- Three.js 및 PointerLockControls CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+  <div id="crosshair"></div>
+  <div id="ui">
+    <div>체력: <span id="hp">100</span></div>
+    <div>남은 적: <span id="enemies-count">0</span></div>
+    <div>데미지 로그: <span id="log">-</span></div>
+  </div>
+
+  <div id="instructions">
+    <h1>VALORANT WEB ENGINE</h1>
+    <p>클릭하여 게임을 시작하세요 (Pointer Lock)</p>
+    
+    <div class="settings">
+      <h3>키 바인딩 설정</h3>
+      <div class="bind-row">전진: <button class="bind-btn" onclick="rebind('forward')">W</button></div>
+      <div class="bind-row">후진: <button class="bind-btn" onclick="rebind('backward')">S</button></div>
+      <div class="bind-row">좌측: <button class="bind-btn" onclick="rebind('left')">A</button></div>
+      <div class="bind-row">우측: <button class="bind-btn" onclick="rebind('right')">D</button></div>
+    </div>
+
+    <button id="start-btn">게 임 시 작</button>
+  </div>
+
+  <div id="game-container"></div>
+
+  <script>
+    // --- 게임 기본 키 바인딩 ---
+    let keyMap = {
+      forward: 'KeyW',
+      backward: 'KeyS',
+      left: 'KeyA',
+      right: 'KeyD'
+    };
+
+    let activeRebind = null;
+    function rebind(action) {
+      activeRebind = action;
+      alert(`새로운 키를 누르세요 (${action})`);
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (activeRebind) {
+        keyMap[activeRebind] = e.code;
+        const btns = document.querySelectorAll('.bind-btn');
+        const indexMap = { forward: 0, backward: 1, left: 2, right: 3 };
+        btns[indexMap[activeRebind]].innerText = e.key.toUpperCase();
+        activeRebind = null;
+      }
+    });
+
+    // --- 씬 및 기본 구조 설정 ---
+    const container = document.getElementById('game-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x222222);
+
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
+
+    // 조명 추가
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(20, 40, 20);
+    scene.add(dirLight);
+
+    // 맵 (바닥 및 구조물)
+    const floorGeo = new THREE.PlaneGeometry(100, 100);
+    const floorMat = new THREE.MeshLambertMaterial({ color: 0x444444 });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    scene.add(floor);
+
+    // --- 포인터 락 (Pointer Lock) 제어 ---
+    let isLocked = false;
+    let yaw = 0, pitch = 0;
+    const startBtn = document.getElementById('start-btn');
+    const instructions = document.getElementById('instructions');
+
+    startBtn.addEventListener('click', () => {
+      renderer.domElement.requestPointerLock();
+    });
+
+    document.addEventListener('pointerlockchange', () => {
+      if (document.pointerLockElement === renderer.domElement) {
+        isLocked = true;
+        instructions.style.display = 'none';
+      } else {
+        isLocked = false;
+        instructions.style.display = 'flex';
+      }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isLocked) return;
+      const sensitivity = 0.002;
+      yaw -= e.movementX * sensitivity;
+      pitch -= e.movementY * sensitivity;
+
+      // 시야 각도 제한 (위/아래)
+      pitch = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, pitch));
+
+      camera.rotation.order = 'YXZ';
+      camera.rotation.y = yaw;
+      camera.rotation.x = pitch;
+    });
+
+    // --- 이동 로직 ---
+    const keysPressed = {};
+    window.addEventListener('keydown', (e) => keysPressed[e.code] = true);
+    window.addEventListener('keyup', (e) => keysPressed[e.code] = false);
+
+    const playerPos = new THREE.Vector3(0, 1.6, 5); // 카메라 위치 (플레이어 눈높이)
+    camera.position.copy(playerPos);
+
+    function updatePlayerMovement(delta) {
+      if (!isLocked) return;
+      const speed = 10 * delta;
+      const moveVector = new THREE.Vector3();
+
+      if (keysPressed[keyMap.forward]) moveVector.z -= 1;
+      if (keysPressed[keyMap.backward]) moveVector.z += 1;
+      if (keysPressed[keyMap.left]) moveVector.x -= 1;
+      if (keysPressed[keyMap.right]) moveVector.x += 1;
+
+      moveVector.normalize();
+      moveVector.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+      
+      playerPos.addScaledVector(moveVector, speed);
+      camera.position.copy(playerPos);
+    }
+
+    // --- 적(Enemy) 모델링: 머리, 가슴, 배, 다리 구현 ---
+    const enemies = [];
+
+    function createEnemy(x, z) {
+      const group = new THREE.Group();
+
+      // 재질
+      const matHead = new THREE.MeshLambertMaterial({ color: 0xff4444 });
+      const matChest = new THREE.MeshLambertMaterial({ color: 0x3388ff });
+      const matStomach = new THREE.MeshLambertMaterial({ color: 0x33bb55 });
+      const matLegs = new THREE.MeshLambertMaterial({ color: 0x888888 });
+
+      // 머리 (Head) - 데미지 160 (헤드샷 원샷)
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), matHead);
+      head.position.y = 1.6;
+      head.userData = { part: '머리 (HeadShot!)', damage: 160 };
+      group.add(head);
+
+      // 가슴 (Chest) - 데미지 40
+      const chest = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.5, 0.4), matChest);
+      chest.position.y = 1.15;
+      chest.userData = { part: '가슴 (Chest)', damage: 40 };
+      group.add(chest);
+
+      // 배/허리 (Stomach) - 데미지 33
+      const stomach = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.4, 0.38), matStomach);
+      stomach.position.y = 0.7;
+      stomach.userData = { part: '배 (Stomach)', damage: 33 };
+      group.add(stomach);
+
+      // 다리 (Legs) - 데미지 25
+      const legs = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.35), matLegs);
+      legs.position.y = 0.25;
+      legs.userData = { part: '다리 (Legs)', damage: 25 };
+      group.add(legs);
+
+      group.position.set(x, 0, z);
+      group.userData = { hp: 100 };
+
+      scene.add(group);
+      enemies.push(group);
+    }
+
+    // 적 스폰
+    createEnemy(0, -10);
+    createEnemy(-4, -8);
+    createEnemy(4, -12);
+
+    // --- 발사 및 연사(Full-Auto Fire) 구현 ---
+    let isFiring = false;
+    let lastFireTime = 0;
+    const fireRate = 100; // 발사 간격 (ms) -> 1초에 10발
+
+    window.addEventListener('mousedown', (e) => {
+      if (e.button === 0 && isLocked) {
+        isFiring = true;
+      }
+    });
+    window.addEventListener('mouseup', (e) => {
+      if (e.button === 0) {
+        isFiring = false;
+      }
+    });
+
+    const raycaster = new THREE.Raycaster();
+
+    function shoot() {
+      const now = performance.now();
+      if (now - lastFireTime < fireRate) return;
+      lastFireTime = now;
+
+      // 카메라 중앙 방향으로 Raycast 발사
+      raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+
+      // 타격 가능한 적의 세부 파트 수집
+      const hittableObjects = [];
+      enemies.forEach(e => hittableObjects.push(...e.children));
+
+      const intersects = raycaster.intersectObjects(hittableObjects);
+
+      if (intersects.length > 0) {
+        const hitPart = intersects[0].object;
+        const enemyGroup = hitPart.parent;
+        const partInfo = hitPart.userData;
+
+        enemyGroup.userData.hp -= partInfo.damage;
+        document.getElementById('log').innerText = `${partInfo.part} 타격! -${partInfo.damage} HP`;
+
+        // 적 적중 시 살짝 붉게 변하는 효과
+        hitPart.material.color.setHex(0xffffff);
+        setTimeout(() => hitPart.material.color.setHex(hitPart.userData.part.includes('머리') ? 0xff4444 : 0x3388ff), 50);
+
+        // HP 0 이하 사망 처리
+        if (enemyGroup.userData.hp <= 0) {
+          scene.remove(enemyGroup);
+          const index = enemies.indexOf(enemyGroup);
+          if (index > -1) enemies.splice(index, 1);
+        }
+      }
+    }
+
+    // --- 메인 루프 ---
+    let lastFrameTime = performance.now();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const now = performance.now();
+      const delta = (now - lastFrameTime) / 1000;
+      lastFrameTime = now;
+
+      updatePlayerMovement(delta);
+
+      if (isFiring) {
+        shoot();
+      }
+
+      document.getElementById('enemies-count').innerText = enemies.length;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // 창 리사이즈 대응
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
