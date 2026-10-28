@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VALORANT 3D Web Engine</title>
+  <title>VALORANT 3D Web Engine - Expanded Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
@@ -43,7 +43,7 @@
     #scope-overlay {
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at center, transparent 25%, black 75%);
+      background: radial-gradient(circle at center, transparent 20%, rgba(0,0,0,0.95) 70%);
       pointer-events: none;
       z-index: 25;
       display: none;
@@ -85,15 +85,15 @@
       text-shadow: 0 0 4px rgba(0,0,0,0.8);
     }
     @keyframes dmgFloat {
-      0% { opacity: 1; transform: translateY(0) scale(1); }
-      100% { opacity: 0; transform: translateY(-30px) scale(0.7); }
+      0% { opacity: 1; transform: translateY(0) scale(1.2); }
+      100% { opacity: 0; transform: translateY(-35px) scale(0.7); }
     }
   </style>
 </head>
 <body class="w-screen h-screen overflow-hidden bg-slate-950">
 
   <!-- HUD Layer -->
-  <div id="hud-overlay" class="absolute inset-0 flex flex-col justify-between p-6 pointer-events-none">
+  <div id="hud-overlay" class="absolute inset-0 flex flex-col justify-between p-6 pointer-events-none z-10">
     <!-- Top Bar -->
     <div class="flex justify-between items-start pointer-events-auto">
       <div class="flex items-center gap-4 bg-slate-900/80 backdrop-blur border-l-4 border-[#ff4655] px-6 py-3 rounded-r-md shadow-lg">
@@ -106,7 +106,7 @@
         </div>
         <div class="h-8 w-px bg-slate-700 mx-1"></div>
         <div>
-          <div class="text-[10px] text-cyan-400 font-semibold tracking-wider uppercase">Heavy Shield (대갑)</div>
+          <div class="text-[10px] text-cyan-400 font-semibold tracking-wider uppercase">Heavy Armor (대갑)</div>
           <div class="text-3xl font-val leading-none text-cyan-300 flex items-baseline gap-1">
             <span id="armor-val">50</span>
             <span class="text-xs text-slate-500 font-sans">/ 50</span>
@@ -119,8 +119,8 @@
         </div>
         <div class="h-8 w-px bg-slate-700 mx-1"></div>
         <div>
-          <div class="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">Enemies</div>
-          <div id="enemies-left" class="text-3xl font-val leading-none text-[#ff4655]">3</div>
+          <div class="text-[10px] text-amber-400 font-semibold tracking-wider uppercase">Total Kills</div>
+          <div id="kills-val" class="text-3xl font-val leading-none text-amber-400">0</div>
         </div>
       </div>
 
@@ -147,22 +147,22 @@
         <div class="bg-slate-900/80 backdrop-blur px-4 py-2 rounded border border-slate-800 text-xs text-slate-400 flex flex-col gap-1">
           <div>STANCE: <span id="stance-label" class="text-white font-bold">STANDING</span></div>
           <div>SPREAD: <span id="spread-label" class="text-amber-400 font-bold">MINIMAL</span></div>
-          <div class="text-[10px] text-slate-500 mt-0.5">[B] Shop | [RMB] Scope | [Shift] Jump | [Alt] Crouch</div>
+          <div id="invuln-badge" class="text-emerald-400 font-bold hidden animate-pulse">PROTECTION ACTIVE</div>
         </div>
 
         <!-- Agent Skills -->
         <div class="flex gap-2">
-          <div class="bg-slate-900/90 border border-slate-700 p-2 rounded text-center w-14">
+          <div id="skill-q-box" class="bg-slate-900/90 border border-slate-700 p-2 rounded text-center w-16">
             <div class="text-[10px] text-slate-400">Q</div>
             <div class="text-xs font-bold text-cyan-300">SMOKE</div>
           </div>
-          <div class="bg-slate-900/90 border border-slate-700 p-2 rounded text-center w-14">
+          <div id="skill-e-box" class="bg-slate-900/90 border border-slate-700 p-2 rounded text-center w-16">
             <div class="text-[10px] text-slate-400">E</div>
             <div class="text-xs font-bold text-emerald-300">HEAL</div>
           </div>
-          <div class="bg-slate-900/90 border border-slate-700 p-2 rounded text-center w-14">
+          <div id="skill-c-box" class="bg-slate-900/90 border border-slate-700 p-2 rounded text-center w-16">
             <div class="text-[10px] text-slate-400">C</div>
-            <div class="text-xs font-bold text-red-400">FLASH</div>
+            <div class="text-xs font-bold text-red-400">MOLOTOV</div>
           </div>
         </div>
       </div>
@@ -178,11 +178,11 @@
   </div>
 
   <!-- Buy Menu Overlay (B key) -->
-  <div id="buy-overlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-md z-40 hidden flex flex-col items-center justify-center p-6">
-    <div class="max-w-3xl w-full bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-2xl">
+  <div id="buy-overlay" class="absolute inset-0 bg-slate-950/85 backdrop-blur-md z-40 hidden flex flex-col items-center justify-center p-6">
+    <div class="max-w-4xl w-full bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-2xl">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-4">
         <div>
-          <h2 class="text-3xl font-val text-[#ff4655]">BUY MENU (상점)</h2>
+          <h2 class="text-3xl font-val text-[#ff4655]">ARSENAL BUY MENU (상점)</h2>
           <p class="text-xs text-slate-400">Press [B] or ESC to Close</p>
         </div>
         <div class="text-right">
@@ -191,39 +191,59 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-3 gap-4 mb-4">
-        <div class="bg-slate-800/50 p-4 rounded border border-slate-700 flex flex-col justify-between">
+      <div class="grid grid-cols-4 gap-3 mb-4 text-xs">
+        <!-- Sidearms -->
+        <div class="bg-slate-800/40 p-3 rounded border border-slate-700 flex flex-col justify-between">
           <div>
-            <div class="text-xs text-slate-400 mb-1">SIDEARMS</div>
-            <div class="font-bold text-white text-sm">Classic ($0)</div>
-            <div class="font-bold text-white text-sm mt-1">Ghost ($500)</div>
-          </div>
-          <div class="flex gap-2 mt-4">
-            <button onclick="buyWeapon('classic')" class="flex-1 bg-slate-700 hover:bg-slate-600 py-1.5 rounded text-xs font-bold">Classic</button>
-            <button onclick="buyWeapon('ghost')" class="flex-1 bg-emerald-600 hover:bg-emerald-500 py-1.5 rounded text-xs font-bold">$500 Ghost</button>
+            <div class="text-[10px] text-slate-400 mb-2 uppercase font-bold tracking-wider">Sidearms</div>
+            <div class="space-y-1.5">
+              <button onclick="buyWeapon('classic')" class="w-full text-left bg-slate-700/60 hover:bg-slate-600 p-2 rounded flex justify-between"><span>Classic</span> <span class="text-emerald-400">$0</span></button>
+              <button onclick="buyWeapon('frenzy')" class="w-full text-left bg-slate-700/60 hover:bg-slate-600 p-2 rounded flex justify-between"><span>Frenzy</span> <span class="text-emerald-400">$450</span></button>
+              <button onclick="buyWeapon('ghost')" class="w-full text-left bg-slate-700/60 hover:bg-slate-600 p-2 rounded flex justify-between"><span>Ghost</span> <span class="text-emerald-400">$500</span></button>
+              <button onclick="buyWeapon('sheriff')" class="w-full text-left bg-slate-700/60 hover:bg-slate-600 p-2 rounded flex justify-between"><span>Sheriff</span> <span class="text-emerald-400">$800</span></button>
+            </div>
           </div>
         </div>
 
-        <div class="bg-slate-800/50 p-4 rounded border border-slate-700 flex flex-col justify-between">
+        <!-- SMGs & Rifles -->
+        <div class="bg-slate-800/40 p-3 rounded border border-slate-700 flex flex-col justify-between">
           <div>
-            <div class="text-xs text-slate-400 mb-1">PRIMARY WEAPONS</div>
-            <div class="text-xs text-slate-300">Spectre ($1600) | Phantom ($2900)</div>
-            <div class="text-xs text-slate-300 mt-1">Vandal ($2900) | Operator ($4700)</div>
-          </div>
-          <div class="grid grid-cols-2 gap-2 mt-4">
-            <button onclick="buyWeapon('spectre')" class="bg-emerald-600 hover:bg-emerald-500 py-1.5 rounded text-xs font-bold">$1600 Spectre</button>
-            <button onclick="buyWeapon('phantom')" class="bg-emerald-600 hover:bg-emerald-500 py-1.5 rounded text-xs font-bold">$2900 Phantom</button>
-            <button onclick="buyWeapon('vandal')" class="bg-emerald-600 hover:bg-emerald-500 py-1.5 rounded text-xs font-bold">$2900 Vandal</button>
-            <button onclick="buyWeapon('operator')" class="bg-emerald-600 hover:bg-emerald-500 py-1.5 rounded text-xs font-bold">$4700 Operator</button>
+            <div class="text-[10px] text-slate-400 mb-2 uppercase font-bold tracking-wider">SMGs & Rifles</div>
+            <div class="space-y-1.5">
+              <button onclick="buyWeapon('stinger')" class="w-full text-left bg-slate-700/60 hover:bg-slate-600 p-2 rounded flex justify-between"><span>Stinger</span> <span class="text-emerald-400">$1100</span></button>
+              <button onclick="buyWeapon('spectre')" class="w-full text-left bg-slate-700/60 hover:bg-slate-600 p-2 rounded flex justify-between"><span>Spectre</span> <span class="text-emerald-400">$1600</span></button>
+              <button onclick="buyWeapon('bulldog')" class="w-full text-left bg-slate-700/60 hover:bg-slate-600 p-2 rounded flex justify-between"><span>Bulldog</span> <span class="text-emerald-400">$2050</span></button>
+              <button onclick="buyWeapon('guardian')" class="w-full text-left bg-slate-700/60 hover:bg-slate-600 p-2 rounded flex justify-between"><span>Guardian</span> <span class="text-emerald-400">$2250</span></button>
+            </div>
           </div>
         </div>
 
-        <div class="bg-slate-800/50 p-4 rounded border border-slate-700 flex flex-col justify-between">
+        <!-- Heavy Rifles & Snipers -->
+        <div class="bg-slate-800/40 p-3 rounded border border-slate-700 flex flex-col justify-between">
           <div>
-            <div class="text-xs text-cyan-400 mb-1 font-bold">HEAVY SHIELD (대갑)</div>
-            <p class="text-xs text-slate-300">Grants +50 Heavy Armor protection. Absorbs 66% incoming hit damage.</p>
+            <div class="text-[10px] text-slate-400 mb-2 uppercase font-bold tracking-wider">Heavy Rifles & Snipers</div>
+            <div class="space-y-1.5">
+              <button onclick="buyWeapon('phantom')" class="w-full text-left bg-slate-700/60 hover:bg-slate-600 p-2 rounded flex justify-between"><span>Phantom</span> <span class="text-emerald-400">$2900</span></button>
+              <button onclick="buyWeapon('vandal')" class="w-full text-left bg-slate-700/60 hover:bg-slate-600 p-2 rounded flex justify-between"><span>Vandal</span> <span class="text-emerald-400">$2900</span></button>
+              <button onclick="buyWeapon('marshal')" class="w-full text-left bg-slate-700/60 hover:bg-slate-600 p-2 rounded flex justify-between"><span>Marshal</span> <span class="text-emerald-400">$950</span></button>
+              <button onclick="buyWeapon('operator')" class="w-full text-left bg-slate-700/60 hover:bg-slate-600 p-2 rounded flex justify-between"><span>Operator</span> <span class="text-emerald-400">$4700</span></button>
+            </div>
           </div>
-          <button onclick="buyArmor()" class="w-full bg-cyan-600 hover:bg-cyan-500 py-2 rounded text-xs font-bold text-white mt-4">$1000 Heavy Armor</button>
+        </div>
+
+        <!-- Heavy Machine Guns & Armor -->
+        <div class="bg-slate-800/40 p-3 rounded border border-slate-700 flex flex-col justify-between">
+          <div>
+            <div class="text-[10px] text-slate-400 mb-2 uppercase font-bold tracking-wider">Heavy & Armor</div>
+            <div class="space-y-1.5 mb-3">
+              <button onclick="buyWeapon('ares')" class="w-full text-left bg-slate-700/60 hover:bg-slate-600 p-2 rounded flex justify-between"><span>Ares</span> <span class="text-emerald-400">$1600</span></button>
+              <button onclick="buyWeapon('odin')" class="w-full text-left bg-slate-700/60 hover:bg-slate-600 p-2 rounded flex justify-between"><span>Odin</span> <span class="text-emerald-400">$3200</span></button>
+            </div>
+            <div class="border-t border-slate-700 pt-2">
+              <div class="text-[10px] text-cyan-400 font-bold mb-1">HEAVY ARMOR (대갑)</div>
+              <button onclick="buyArmor()" class="w-full bg-cyan-600 hover:bg-cyan-500 py-2 rounded text-xs font-bold text-white">$1000 Heavy Shield</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -235,15 +255,15 @@
       <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-6">
         <div>
           <h1 class="text-4xl font-val tracking-wider text-[#ff4655] leading-none">VALORANT BROWSER FPS</h1>
-          <p class="text-xs text-slate-400 mt-1">Node.js / Render Deployment Ready Single-File Engine</p>
+          <p class="text-xs text-slate-400 mt-1">Multi-Weapon & Continuous Wave Engine</p>
         </div>
         <div class="text-xs bg-slate-800 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700">
-          v1.0.0
+          v2.0.0
         </div>
       </div>
 
       <div class="space-y-4 max-h-[50vh] overflow-y-auto pr-2 mb-6">
-        <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Mouse & Keybindings</h3>
+        <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Mouse Sensitivity & Keybindings</h3>
         
         <!-- Sensitivity Slider & Input -->
         <div class="p-3 bg-slate-800/60 rounded border border-slate-700">
@@ -262,7 +282,7 @@
       </div>
 
       <button id="btn-start" class="w-full bg-[#ff4655] hover:bg-[#e03e4c] text-white font-val text-2xl py-3 rounded tracking-wider transition-all duration-200 shadow-lg shadow-[#ff4655]/20">
-        CLICK TO START MATCH (POINTER LOCK)
+        START / RESUME MATCH (POINTER LOCK)
       </button>
     </div>
   </div>
@@ -284,11 +304,7 @@
       reload: 'KeyR',
       skillQ: 'KeyQ',
       skillE: 'KeyE',
-      skillC: 'KeyC',
-      slot1: 'Digit1',
-      slot2: 'Digit2',
-      slot3: 'Digit3',
-      slot4: 'Digit4'
+      skillC: 'KeyC'
     };
 
     let keybinds = { ...DEFAULT_KEYBINDS };
@@ -296,57 +312,36 @@
     let sensitivityScale = 0.0015 * rawSens;
     let awaitingRebindKey = null;
 
-    // Weapons Stats & Recoil Specifications
+    // Expanded 12 Weapon Arsenal
     const WEAPONS = {
-      vandal: {
-        name: 'VANDAL', cost: 2900,
-        damage: { head: 160, chest: 40, legs: 34 },
-        fireRate: 105, magSize: 25, clip: 25, reserve: 75,
-        recoil: 0.015, baseSpread: 0.0018, color: 0x222222, length: 0.85, hasScope: true
-      },
-      phantom: {
-        name: 'PHANTOM', cost: 2900,
-        damage: { head: 156, chest: 39, legs: 33 },
-        fireRate: 90, magSize: 30, clip: 30, reserve: 90,
-        recoil: 0.010, baseSpread: 0.0012, color: 0x1e293b, length: 0.75, hasScope: true
-      },
-      operator: {
-        name: 'OPERATOR', cost: 4700,
-        damage: { head: 255, chest: 150, legs: 120 },
-        fireRate: 1200, magSize: 5, clip: 5, reserve: 15,
-        recoil: 0.060, baseSpread: 0.0001, color: 0x334155, length: 1.25, hasScope: true
-      },
-      spectre: {
-        name: 'SPECTRE', cost: 1600,
-        damage: { head: 78, chest: 26, legs: 22 },
-        fireRate: 75, magSize: 30, clip: 30, reserve: 90,
-        recoil: 0.008, baseSpread: 0.0035, color: 0x475569, length: 0.55, hasScope: false
-      },
-      ghost: {
-        name: 'GHOST', cost: 500,
-        damage: { head: 105, chest: 30, legs: 25 },
-        fireRate: 200, magSize: 15, clip: 15, reserve: 45,
-        recoil: 0.009, baseSpread: 0.0010, color: 0x334155, length: 0.45, hasScope: false
-      },
-      classic: {
-        name: 'CLASSIC', cost: 0,
-        damage: { head: 78, chest: 26, legs: 22 },
-        fireRate: 250, magSize: 12, clip: 12, reserve: 36,
-        recoil: 0.007, baseSpread: 0.0025, color: 0x475569, length: 0.40, hasScope: false
-      }
+      classic: { name: 'CLASSIC', cost: 0, damage: { head: 78, chest: 26, legs: 22 }, fireRate: 250, magSize: 12, clip: 12, reserve: 36, recoil: 0.007, baseSpread: 0.0025, color: 0x475569, length: 0.40, hasScope: false },
+      frenzy: { name: 'FRENZY', cost: 450, damage: { head: 78, chest: 26, legs: 22 }, fireRate: 70, magSize: 15, clip: 15, reserve: 45, recoil: 0.012, baseSpread: 0.0040, color: 0x3b82f6, length: 0.42, hasScope: false },
+      ghost: { name: 'GHOST', cost: 500, damage: { head: 105, chest: 30, legs: 25 }, fireRate: 180, magSize: 15, clip: 15, reserve: 45, recoil: 0.008, baseSpread: 0.0010, color: 0x334155, length: 0.45, hasScope: false },
+      sheriff: { name: 'SHERIFF', cost: 800, damage: { head: 160, chest: 55, legs: 47 }, fireRate: 300, magSize: 6, clip: 6, reserve: 24, recoil: 0.025, baseSpread: 0.0015, color: 0xb91c1c, length: 0.50, hasScope: false },
+      stinger: { name: 'STINGER', cost: 1100, damage: { head: 67, chest: 27, legs: 23 }, fireRate: 50, magSize: 20, clip: 20, reserve: 60, recoil: 0.014, baseSpread: 0.0045, color: 0xd97706, length: 0.55, hasScope: false },
+      spectre: { name: 'SPECTRE', cost: 1600, damage: { head: 78, chest: 26, legs: 22 }, fireRate: 75, magSize: 30, clip: 30, reserve: 90, recoil: 0.008, baseSpread: 0.0035, color: 0x475569, length: 0.60, hasScope: false },
+      bulldog: { name: 'BULLDOG', cost: 2050, damage: { head: 116, chest: 35, legs: 30 }, fireRate: 110, magSize: 24, clip: 24, reserve: 72, recoil: 0.011, baseSpread: 0.0018, color: 0x059669, length: 0.70, hasScope: true },
+      guardian: { name: 'GUARDIAN', cost: 2250, damage: { head: 195, chest: 65, legs: 49 }, fireRate: 190, magSize: 12, clip: 12, reserve: 36, recoil: 0.018, baseSpread: 0.0005, color: 0x4f46e5, length: 0.80, hasScope: true },
+      phantom: { name: 'PHANTOM', cost: 2900, damage: { head: 156, chest: 39, legs: 33 }, fireRate: 90, magSize: 30, clip: 30, reserve: 90, recoil: 0.010, baseSpread: 0.0012, color: 0x1e293b, length: 0.75, hasScope: true },
+      vandal: { name: 'VANDAL', cost: 2900, damage: { head: 160, chest: 40, legs: 34 }, fireRate: 105, magSize: 25, clip: 25, reserve: 75, recoil: 0.015, baseSpread: 0.0018, color: 0x222222, length: 0.85, hasScope: true },
+      marshal: { name: 'MARSHAL', cost: 950, damage: { head: 202, chest: 101, legs: 85 }, fireRate: 700, magSize: 5, clip: 5, reserve: 15, recoil: 0.040, baseSpread: 0.0002, color: 0x78716c, length: 1.10, hasScope: true },
+      operator: { name: 'OPERATOR', cost: 4700, damage: { head: 255, chest: 150, legs: 120 }, fireRate: 1200, magSize: 5, clip: 5, reserve: 15, recoil: 0.060, baseSpread: 0.0001, color: 0x334155, length: 1.25, hasScope: true },
+      ares: { name: 'ARES', cost: 1600, damage: { head: 72, chest: 30, legs: 25 }, fireRate: 70, magSize: 50, clip: 50, reserve: 100, recoil: 0.013, baseSpread: 0.0030, color: 0x65a30d, length: 0.90, hasScope: true },
+      odin: { name: 'ODIN', cost: 3200, damage: { head: 95, chest: 38, legs: 32 }, fireRate: 55, magSize: 100, clip: 100, reserve: 200, recoil: 0.016, baseSpread: 0.0035, color: 0x7c3aed, length: 1.00, hasScope: true }
     };
 
     let activeWeaponKey = 'vandal';
     let currentWeapon = WEAPONS[activeWeaponKey];
 
-    // Player Physics & Health State
+    // Player State
     const player = {
       pos: new THREE.Vector3(0, 1.6, 15),
       vel: new THREE.Vector3(),
       yaw: 0, pitch: 0,
       height: 1.6, targetHeight: 1.6, crouchHeight: 0.9, standHeight: 1.6,
       isGrounded: true, isCrouching: false, isScoped: false,
-      hp: 100, maxHp: 100, armor: 50, maxArmor: 50, credits: 4700
+      hp: 100, maxHp: 100, armor: 50, maxArmor: 50, credits: 4700, kills: 0,
+      invulnerableUntil: 0
     };
 
     const keysPressed = {};
@@ -355,6 +350,19 @@
     let continuousShots = 0;
     let isLocked = false;
     let isShopOpen = false;
+    let isReloading = false;
+
+    // Cooldowns
+    let lastSkillQ = 0, lastSkillE = 0, lastSkillC = 0;
+
+    // Spawner Config
+    const SPAWN_POINTS = [
+      new THREE.Vector3(0, 0, -35),
+      new THREE.Vector3(-30, 0, -20),
+      new THREE.Vector3(30, 0, -20),
+      new THREE.Vector3(-25, 0, 20),
+      new THREE.Vector3(25, 0, 20)
+    ];
 
     // ==========================================
     // 2. THREE.JS SCENE SETUP
@@ -374,7 +382,6 @@
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
-    // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
@@ -391,19 +398,17 @@
     const colliders = [];
 
     function buildMap() {
-      // Floor
-      const floorGeo = new THREE.PlaneGeometry(100, 100);
+      const floorGeo = new THREE.PlaneGeometry(120, 120);
       const floorMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 });
       const floor = new THREE.Mesh(floorGeo, floorMat);
       floor.rotation.x = -Math.PI / 2;
       floor.receiveShadow = true;
       scene.add(floor);
 
-      const grid = new THREE.GridHelper(100, 50, 0xff4655, 0x334155);
+      const grid = new THREE.GridHelper(120, 60, 0xff4655, 0x334155);
       grid.position.y = 0.01;
       scene.add(grid);
 
-      // Boundaries & Covers
       const wallMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 });
       const boxMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.4 });
       const valMat = new THREE.MeshStandardMaterial({ color: 0xff4655, roughness: 0.3 });
@@ -417,18 +422,18 @@
         colliders.push(new THREE.Box3().setFromObject(mesh));
       };
 
-      // Outer Bounds
-      createBox(0, 0, -50, 100, 8, 2, wallMat);
-      createBox(0, 0, 50, 100, 8, 2, wallMat);
-      createBox(-50, 0, 0, 2, 8, 100, wallMat);
-      createBox(50, 0, 0, 2, 8, 100, wallMat);
+      // Boundaries
+      createBox(0, 0, -60, 120, 8, 2, wallMat);
+      createBox(0, 0, 60, 120, 8, 2, wallMat);
+      createBox(-60, 0, 0, 2, 8, 120, wallMat);
+      createBox(60, 0, 0, 2, 8, 120, wallMat);
 
-      // Tactical Site Boxes
-      createBox(0, 0, 0, 4, 3, 4, valMat);
-      createBox(-10, 0, -10, 6, 2.5, 3, boxMat);
-      createBox(10, 0, -15, 3, 3, 8, boxMat);
-      createBox(-15, 0, 10, 4, 4, 4, boxMat);
-      createBox(12, 0, 10, 5, 2, 5, boxMat);
+      // Covers
+      createBox(0, 0, 0, 5, 3, 5, valMat);
+      createBox(-15, 0, -15, 6, 3, 3, boxMat);
+      createBox(15, 0, -15, 4, 3, 8, boxMat);
+      createBox(-20, 0, 15, 5, 4, 5, boxMat);
+      createBox(20, 0, 15, 6, 2.5, 6, boxMat);
     }
 
     buildMap();
@@ -459,33 +464,30 @@
     }
 
     // ==========================================
-    // 5. ENEMY AI SYSTEM (INVISIBLE HITBOXES + HEAVY ARMOR)
+    // 5. ENEMY AI SYSTEM (CONTINUOUS WAVE SPAWNER)
     // ==========================================
     const enemies = [];
+    const maxEnemies = 6;
 
-    function createEnemy(x, z) {
+    function createEnemyAt(pos) {
       const group = new THREE.Group();
 
-      // Visible Enemy Visual Mesh (Red Robot Mesh)
       const visMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.4 });
-      const armorVisMat = new THREE.MeshStandardMaterial({ color: 0x06b6d4, roughness: 0.3 }); // Heavy Shield Indicator
+      const armorVisMat = new THREE.MeshStandardMaterial({ color: 0x06b6d4, roughness: 0.3 });
 
-      // Head Mesh
       const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), visMat);
       headMesh.position.y = 1.6;
       group.add(headMesh);
 
-      // Chest Mesh (with armor visual)
       const chestMesh = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.6, 0.35), armorVisMat);
       chestMesh.position.y = 1.1;
       group.add(chestMesh);
 
-      // Legs Mesh
       const legsMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.3), visMat);
       legsMesh.position.y = 0.35;
       group.add(legsMesh);
 
-      // --- INVISIBLE HITBOXES FOR ACCURATE SHOOTING ---
+      // Invisible Precision Hitboxes
       const invisibleMat = new THREE.MeshBasicMaterial({ visible: false });
 
       const headHitbox = new THREE.Mesh(new THREE.SphereGeometry(0.28, 8, 8), invisibleMat);
@@ -503,14 +505,11 @@
       legsHitbox.userData = { part: 'LEGS', partMultiplier: 'legs' };
       group.add(legsHitbox);
 
-      group.position.set(x, 0, z);
+      group.position.copy(pos);
       group.userData = {
         hp: 100,
-        armor: 50, // Heavy Armor (대갑)
-        maxHp: 100,
-        maxArmor: 50,
-        lastShootTime: 0,
-        patrolAngle: Math.random() * Math.PI * 2,
+        armor: 50,
+        lastShootTime: performance.now() + 1000, // Safe delay before first attack
         hitboxes: [headHitbox, chestHitbox, legsHitbox],
         chestMesh: chestMesh
       };
@@ -519,38 +518,36 @@
       enemies.push(group);
     }
 
-    function spawnInitialEnemies() {
-      createEnemy(0, -15);
-      createEnemy(-12, -20);
-      createEnemy(15, -10);
+    function maintainEnemyPopulation() {
+      while (enemies.length < maxEnemies) {
+        // Pick random spawn point far from player
+        const point = SPAWN_POINTS[Math.floor(Math.random() * SPAWN_POINTS.length)].clone();
+        point.x += (Math.random() - 0.5) * 8;
+        point.z += (Math.random() - 0.5) * 8;
+        if (point.distanceTo(player.pos) > 12) {
+          createEnemyAt(point);
+        }
+      }
     }
 
-    spawnInitialEnemies();
-
-    // AI Enemy Behavior Update Loop (Patrol, Track Player, Shoot Back)
     function updateEnemies(delta, now) {
       enemies.forEach(enemy => {
         const dist = enemy.position.distanceTo(player.pos);
         
-        // AI Tracking & Movement
-        if (dist < 30) {
-          // Rotate towards player
+        if (dist < 40) {
           const dir = new THREE.Vector3().subVectors(player.pos, enemy.position);
           dir.y = 0;
           dir.normalize();
           enemy.rotation.y = Math.atan2(dir.x, dir.z);
 
-          // Patrol & Walk towards player if far
-          if (dist > 6) {
-            enemy.position.addScaledVector(dir, 2.5 * delta);
+          if (dist > 7) {
+            enemy.position.addScaledVector(dir, 3.2 * delta);
           }
 
-          // Attack Player (AI Shooting Back)
-          if (now - enemy.userData.lastShootTime > 1200) {
+          // Attack Player
+          if (now - enemy.userData.lastShootTime > 1400) {
             enemy.userData.lastShootTime = now;
-            
-            // Player Takes Damage with Heavy Shield Calculation
-            const rawDmg = Math.floor(15 + Math.random() * 15);
+            const rawDmg = Math.floor(12 + Math.random() * 12);
             applyDamageToPlayer(rawDmg);
           }
         }
@@ -558,9 +555,12 @@
     }
 
     // ==========================================
-    // 6. PLAYER DAMAGE & ARMOR CALCULATION
+    // 6. PLAYER DAMAGE & INVULNERABILITY FIX
     // ==========================================
     function applyDamageToPlayer(dmg) {
+      const now = performance.now();
+      if (now < player.invulnerableUntil) return; // Prevent Spawn Instant Death
+
       if (player.armor > 0) {
         const armorAbsorb = Math.min(player.armor, Math.ceil(dmg * 0.66));
         const hpDmg = dmg - armorAbsorb;
@@ -572,7 +572,7 @@
 
       if (player.hp <= 0) {
         player.hp = 0;
-        alert('MATCH FAILED! You were eliminated. Restarting round...');
+        addKillFeedLog('⚠️ YOU WERE ELIMINATED! Respawning...');
         respawnPlayer();
       }
 
@@ -582,13 +582,17 @@
     function respawnPlayer() {
       player.hp = 100;
       player.armor = 50;
-      player.pos.set(0, 1.6, 15);
+      player.pos.set(0, 1.6, 25);
       player.vel.set(0, 0, 0);
+      player.invulnerableUntil = performance.now() + 2500; // 2.5s Invulnerability Grace Period
+
+      // Reset enemy attack timers
+      enemies.forEach(e => e.userData.lastShootTime = performance.now() + 2000);
       updateHUD();
     }
 
     // ==========================================
-    // 7. WEAPON BALLISTICS, RECOIL & INACCURACY
+    // 7. WEAPON BALLISTICS & SHOOTING
     // ==========================================
     const raycaster = new THREE.Raycaster();
 
@@ -604,22 +608,18 @@
       currentWeapon.clip--;
       continuousShots++;
 
-      // Recoil & First-bullet Inaccuracy (초탄 퍼짐) Calculation
       const isMoving = player.vel.lengthSq() > 0.1;
       const movementPenalty = isMoving ? 0.025 : 0.001;
       const crouchBonus = player.isCrouching ? 0.5 : 1.0;
       
       const spreadFactor = (currentWeapon.baseSpread + (continuousShots * currentWeapon.recoil * 0.2) + movementPenalty) * crouchBonus;
 
-      // Apply Pitch Recoil Kick to Camera
       player.pitch += currentWeapon.recoil * (0.8 + Math.random() * 0.4);
       player.yaw += (Math.random() - 0.5) * currentWeapon.recoil;
 
-      // Gun Kick Animation
       gunGroup.position.z = -0.25;
       setTimeout(() => gunGroup.position.z = -0.4, 50);
 
-      // Raycast Shooting Direction with Inaccuracy Offset
       const spreadVector = new THREE.Vector3(
         (Math.random() - 0.5) * spreadFactor,
         (Math.random() - 0.5) * spreadFactor,
@@ -629,7 +629,6 @@
       spreadVector.applyEuler(new THREE.Euler(player.pitch, player.yaw, 0, 'YXZ'));
       raycaster.set(camera.position, spreadVector);
 
-      // Gather All Invisible Hitboxes
       const hitboxes = [];
       enemies.forEach(e => hitboxes.push(...e.userData.hitboxes));
 
@@ -641,28 +640,27 @@
         const part = hitBoxObj.userData.partMultiplier;
         const rawDmg = currentWeapon.damage[part];
 
-        // Apply Heavy Armor Absorption for Enemy
         let actualDmg = rawDmg;
         if (enemyGroup.userData.armor > 0) {
           const armorDmg = Math.min(enemyGroup.userData.armor, Math.ceil(rawDmg * 0.66));
           enemyGroup.userData.armor -= armorDmg;
           actualDmg = rawDmg - armorDmg;
           if (enemyGroup.userData.armor <= 0) {
-            enemyGroup.userData.chestMesh.material.color.setHex(0xef4444); // Shield Broken Color
+            enemyGroup.userData.chestMesh.material.color.setHex(0xef4444);
           }
         }
         enemyGroup.userData.hp -= actualDmg;
 
-        // UI Feedback (Damage Numbers & Kill feed)
         showDamagePopup(intersects[0].point, rawDmg, hitBoxObj.userData.part);
-        addKillFeedLog(`Hit ${enemyGroup.userData.hp <= 0 ? 'ELIMINATED' : hitBoxObj.userData.part} (-${rawDmg} HP)`);
 
-        // Enemy Death Processing
         if (enemyGroup.userData.hp <= 0) {
           scene.remove(enemyGroup);
           const idx = enemies.indexOf(enemyGroup);
           if (idx > -1) enemies.splice(idx, 1);
           player.credits += 300;
+          player.kills++;
+          addKillFeedLog(`🎯 Kill confirmed (+ $300)`);
+          maintainEnemyPopulation();
         }
       }
 
@@ -681,10 +679,41 @@
         currentWeapon.reserve -= available;
         isReloading = false;
         updateHUD();
-      }, 1500);
+      }, 1400);
     }
 
-    // Floating Damage Number Display
+    // Agent Skills (Q, E, C)
+    function triggerSkill(type) {
+      const now = performance.now();
+      if (type === 'Q' && now - lastSkillQ > 8000) { // Smoke Dome
+        lastSkillQ = now;
+        const smoke = new THREE.Mesh(
+          new THREE.SphereGeometry(4, 16, 16),
+          new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.6 })
+        );
+        smoke.position.copy(player.pos).add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(6));
+        scene.add(smoke);
+        setTimeout(() => scene.remove(smoke), 7000);
+        addKillFeedLog('💨 Cloudburst Smoke Cast');
+      } else if (type === 'E' && now - lastSkillE > 10000) { // Heal
+        lastSkillE = now;
+        player.hp = Math.min(player.maxHp, player.hp + 50);
+        updateHUD();
+        addKillFeedLog('💚 Agent Healing +50 HP');
+      } else if (type === 'C' && now - lastSkillC > 12000) { // Molotov
+        lastSkillC = now;
+        const fire = new THREE.Mesh(
+          new THREE.CylinderGeometry(3.5, 3.5, 0.2),
+          new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.7 })
+        );
+        fire.position.copy(player.pos).add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(8));
+        fire.position.y = 0.1;
+        scene.add(fire);
+        setTimeout(() => scene.remove(fire), 5000);
+        addKillFeedLog('🔥 Snakebite Fire Cast');
+      }
+    }
+
     function showDamagePopup(position, damage, partText) {
       const screenPos = position.clone().project(camera);
       const x = (screenPos.x * 0.5 + 0.5) * window.innerWidth;
@@ -707,11 +736,11 @@
       item.className = 'bg-slate-900/90 text-white px-3 py-1 rounded border-r-2 border-[#ff4655] shadow';
       item.innerText = msg;
       feed.appendChild(item);
-      setTimeout(() => item.remove(), 3000);
+      setTimeout(() => item.remove(), 2500);
     }
 
     // ==========================================
-    // 8. BUY MENU (B KEY) & WEAPONS SHOP
+    // 8. BUY MENU & SENSITIVITY CONTROLS
     // ==========================================
     function toggleBuyMenu() {
       if (!isLocked && !isShopOpen) return;
@@ -739,7 +768,7 @@
         updateGunMesh();
         updateHUD();
         document.getElementById('shop-credits').innerText = `$${player.credits}`;
-        addKillFeedLog(`Purchased ${gun.name}`);
+        addKillFeedLog(`Equipped ${gun.name}`);
       }
     }
 
@@ -749,13 +778,10 @@
         player.armor = player.maxArmor;
         updateHUD();
         document.getElementById('shop-credits').innerText = `$${player.credits}`;
-        addKillFeedLog('Purchased Heavy Armor (대갑)');
+        addKillFeedLog('Purchased Heavy Shield (대갑)');
       }
     }
 
-    // ==========================================
-    // 9. CONTROLS, SENSITIVITY & INPUT HANDLER
-    // ==========================================
     function updateSensitivity(newVal) {
       rawSens = Math.max(0.0000, Math.min(10.0000, parseFloat(newVal) || 0.0000));
       sensitivityScale = 0.0015 * rawSens;
@@ -767,7 +793,6 @@
     document.getElementById('sens-slider').addEventListener('input', (e) => updateSensitivity(e.target.value));
     document.getElementById('sens-input').addEventListener('change', (e) => updateSensitivity(e.target.value));
 
-    // Pointer Lock & Mouse Look
     const btnStart = document.getElementById('btn-start');
     const menuOverlay = document.getElementById('menu-overlay');
 
@@ -795,7 +820,6 @@
       camera.rotation.y = player.yaw;
     });
 
-    // Keyboard & Mouse Buttons Listener
     window.addEventListener('keydown', (e) => {
       if (awaitingRebindKey) {
         keybinds[awaitingRebindKey] = e.code;
@@ -808,21 +832,18 @@
 
       if (e.code === keybinds.buyMenu) toggleBuyMenu();
       if (e.code === keybinds.reload) reloadWeapon();
-      
-      // Weapon Slots Quick Select
-      if (e.code === keybinds.slot1) { activeWeaponKey = 'vandal'; currentWeapon = WEAPONS.vandal; updateGunMesh(); updateHUD(); }
-      if (e.code === keybinds.slot2) { activeWeaponKey = 'ghost'; currentWeapon = WEAPONS.ghost; updateGunMesh(); updateHUD(); }
-      if (e.code === keybinds.slot3) { activeWeaponKey = 'classic'; currentWeapon = WEAPONS.classic; updateGunMesh(); updateHUD(); }
-      if (e.code === keybinds.slot4) { activeWeaponKey = 'operator'; currentWeapon = WEAPONS.operator; updateGunMesh(); updateHUD(); }
+      if (e.code === keybinds.skillQ) triggerSkill('Q');
+      if (e.code === keybinds.skillE) triggerSkill('E');
+      if (e.code === keybinds.skillC) triggerSkill('C');
     });
 
     window.addEventListener('keyup', (e) => keysPressed[e.code] = false);
 
     window.addEventListener('mousedown', (e) => {
       if (!isLocked) return;
-      if (e.button === 0) { // Left Click (Shoot)
+      if (e.button === 0) {
         isFiring = true;
-      } else if (e.button === 2) { // Right Click (Scope / ADS)
+      } else if (e.button === 2) {
         if (currentWeapon.hasScope) {
           player.isScoped = !player.isScoped;
           document.getElementById('scope-overlay').style.display = player.isScoped ? 'block' : 'none';
@@ -835,25 +856,23 @@
     window.addEventListener('mouseup', (e) => {
       if (e.button === 0) {
         isFiring = false;
-        continuousShots = 0; // Reset spread recoil cycle
+        continuousShots = 0;
       }
     });
 
     window.addEventListener('contextmenu', e => e.preventDefault());
 
     // ==========================================
-    // 10. REALISTIC PLAYER MOVEMENT PHYSICS
+    // 9. PLAYER MOVEMENT & ANIMATION LOOP
     // ==========================================
     function updatePlayerMovement(delta) {
       if (!isLocked) return;
 
-      // Crouch Logic (Left Alt)
       player.isCrouching = !!keysPressed[keybinds.crouch];
       player.targetHeight = player.isCrouching ? player.crouchHeight : player.standHeight;
       player.height += (player.targetHeight - player.height) * 12 * delta;
       camera.position.y = player.pos.y + player.height - 1.6;
 
-      // Direction vectors
       const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw);
       const side = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw);
 
@@ -864,39 +883,32 @@
       if (keysPressed[keybinds.left]) moveDir.sub(side);
       moveDir.normalize();
 
-      // Speed Modifier
       let moveSpeed = player.isCrouching ? 4.0 : 9.0;
       if (player.isScoped) moveSpeed *= 0.6;
 
-      // Apply Horizontal Acceleration
       player.vel.x = moveDir.x * moveSpeed;
       player.vel.z = moveDir.z * moveSpeed;
 
-      // Jump Impulse (Left Shift)
       if (keysPressed[keybinds.jump] && player.isGrounded) {
         player.vel.y = 7.5;
         player.isGrounded = false;
       }
 
-      // Gravity Physics
       player.vel.y -= 22.0 * delta;
       player.pos.addScaledVector(player.vel, delta);
 
-      // Ground Collision
       if (player.pos.y <= 1.6) {
         player.pos.y = 1.6;
         player.vel.y = 0;
         player.isGrounded = true;
       }
 
-      // Map Wall Collision Resolution
       const playerBox = new THREE.Box3().setFromCenterAndSize(
         player.pos, new THREE.Vector3(0.8, player.height, 0.8)
       );
 
       colliders.forEach(box => {
         if (playerBox.intersectsBox(box)) {
-          // Push player back
           player.pos.subScaledVector(moveDir, moveSpeed * delta);
         }
       });
@@ -904,20 +916,24 @@
       cameraGroup.position.copy(player.pos);
     }
 
-    // ==========================================
-    // 11. HUD & DYNAMIC CROSSHAIR BLOOM
-    // ==========================================
     function updateHUD() {
       document.getElementById('hp-val').innerText = Math.max(0, player.hp);
       document.getElementById('armor-val').innerText = Math.max(0, player.armor);
       document.getElementById('credits-val').innerText = `$${player.credits}`;
-      document.getElementById('enemies-left').innerText = enemies.length;
+      document.getElementById('kills-val').innerText = player.kills;
       document.getElementById('weapon-name').innerText = currentWeapon.name;
       document.getElementById('ammo-clip').innerText = currentWeapon.clip;
       document.getElementById('ammo-reserve').innerText = currentWeapon.reserve;
       document.getElementById('stance-label').innerText = player.isCrouching ? 'CROUCHING' : 'STANDING';
 
-      // Dynamic Crosshair Bloom Animation
+      const now = performance.now();
+      const invulnBadge = document.getElementById('invuln-badge');
+      if (now < player.invulnerableUntil) {
+        invulnBadge.classList.remove('hidden');
+      } else {
+        invulnBadge.classList.add('hidden');
+      }
+
       const isMoving = player.vel.lengthSq() > 0.1;
       const bloom = (continuousShots * 4) + (isMoving ? 12 : 0) + (player.isCrouching ? -2 : 0);
       
@@ -928,13 +944,12 @@
       document.getElementById('spread-label').innerText = isMoving ? 'HIGH (MOVING)' : (continuousShots > 2 ? 'RECOIL BLOOM' : 'MINIMAL');
     }
 
-    // Dynamic Keybind Grid Render
     function renderKeybindGrid() {
       const grid = document.getElementById('keybind-grid');
       grid.innerHTML = '';
       const labels = {
         forward: 'Move Forward', backward: 'Move Backward', left: 'Strafe Left', right: 'Strafe Right',
-        jump: 'Jump (기본: Shift)', crouch: 'Crouch (기본: Alt)', buyMenu: 'Buy Menu (상점)', reload: 'Reload'
+        jump: 'Jump (기본: Shift)', crouch: 'Crouch (기본: Alt)', buyMenu: 'Buy Menu', reload: 'Reload'
       };
 
       Object.keys(labels).forEach(action => {
@@ -956,10 +971,8 @@
     }
 
     renderKeybindGrid();
+    maintainEnemyPopulation();
 
-    // ==========================================
-    // 12. MAIN GAME ANIMATION LOOP
-    // ==========================================
     let lastFrameTime = performance.now();
 
     function animate() {
@@ -982,7 +995,6 @@
 
     animate();
 
-    // Window Resize Handler
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
